@@ -70,7 +70,7 @@ static const int EOS_TOKEN_ID = 2;
 // determine number of model parts based on the dimension
 static const std::unordered_map<int, int> LLAMA_N_PARTS = {
     { 4096, 1 },
-    { 5120, 2 },
+    { 5120, 1 },
     { 6656, 4 },
     { 8192, 8 },
 };
