@@ -59,6 +59,7 @@ option(LLAMA_FMA                    "llama: enable FMA"                         
 # 3rd party libs
 option(LLAMA_ACCELERATE             "llama: enable Accelerate framework"                    ON)
 option(LLAMA_OPENBLAS               "llama: use OpenBLAS"                                   OFF)
+option(LLAMA_CLBLAST                "llama: use CLBLAST"                                    ON)
 
 option(LLAMA_BUILD_TESTS            "llama: build tests"    ${LLAMA_STANDALONE})
 option(LLAMA_BUILD_EXAMPLES         "llama: build examples" ${LLAMA_STANDALONE})
@@ -112,6 +113,16 @@ if (LLAMA_OPENBLAS)
     else()
         message(WARNING "OpenBLAS not found")
     endif()
+endif()
+if (LLAMA_CLBLAST)
+    set(NETLIB ON)
+    set(NETLIB_PERSISTENT_OPENCL ON)
+    if (LLAMA_STATIC)
+        set(BUILD_SHARED_LIBS OFF)
+    endif()
+    add_subdirectory(CLBlast)
+
+    add_compile_definitions(GGML_USE_CLBLAST)
 endif()
 
 if (LLAMA_ALL_WARNINGS)
@@ -229,6 +240,9 @@ add_library(ggml OBJECT
 
 target_include_directories(ggml PUBLIC .)
 target_compile_features(ggml PUBLIC c_std_11) # don't bump
+if (LLAMA_CLBLAST)
+target_include_directories(ggml PUBLIC ./CLBlast/include)
+endif ()
 
 #
 # Linking
@@ -237,6 +251,9 @@ target_compile_features(ggml PUBLIC c_std_11) # don't bump
 target_link_libraries(ggml PRIVATE Threads::Threads ${LLAMA_EXTRA_LIBS})
 target_link_libraries(llama PRIVATE ggml utils)
 target_link_libraries(quantize PRIVATE ggml utils)
+if (LLAMA_CLBLAST)
+target_link_libraries(ggml PRIVATE clblast)
+endif ()
 
 #
 # programs, examples and tests
